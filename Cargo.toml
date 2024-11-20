@@ -1,0 +1,12 @@
+[package]
+name = "chess_parser"
+version = "0.1.0"
+edition = "2021"
+authors = ["Polpena <pprokopena@gmail.com>"]
+description = "A Rust library for parsing chess games in PGN (Portable Game Notation) format using a custom grammar."
+license = "MIT"
+
+[dependencies]
+pest = "2.1"
+pest_derive = "2.1"
+clap = { version = "4.0", features = ["derive"] }

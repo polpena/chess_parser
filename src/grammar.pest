@@ -1,0 +1,72 @@
+WHITESPACE = _{ " " | "\t" | "\n" }
+
+// main rule containing the entire game
+chess_game    = { metadata* ~ chess_turn* ~ game_term }
+
+// current turns number ended by a dot
+turn_number   = { ASCII_DIGIT+ ~ "." }
+
+// full turn, consisting of both players' moves
+chess_turn    = { turn_number ~ chess_move ~ chess_move }
+
+// single chess move
+chess_move    = { (special | pawn_move | pawn_capture | piece_move) ~ annotation? }
+
+// castling moves - long and short
+special       = { "O-O-O" | "O-O" }
+
+// regular piece move - piece specification, then move handling
+piece_move    = { piece ~ move_options }
+
+// pawn moving - new location and possible promotion
+pawn_move     = { location ~ promotion? }
+
+// pawn capturing - piece specification (through column), capture, new location and possible promotion
+pawn_capture  = { column ~ capture ~ location ~ promotion? }
+
+// piece names, king/queen/rook/bishop/knight
+piece         = { "K" | "Q" | "R" | "B" | "N" }
+
+// full target location
+location      = { column ~ row }
+
+// piece capture
+capture       = { "x" }
+
+// piece promotion - from pawn to a new piece (except king)
+promotion     = { "=" ~ (!"K" ~ piece) }
+
+// optional check, mate and analysis annotation
+annotation    = { "+" | "#" | "!!" | "!?" | "?!" | "??" | "?" | "!" }
+
+// game termination - also handles cases when it ends mid-turn
+game_term     = { (turn_number ~ chess_move)? ~ result }
+
+// game result - victory for either side, or with a draw
+result        = { "1-0" | "0-1" | "1/2-1/2" }
+
+// chess board columns
+column        = { "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" }
+
+// chess board rows
+row           = { "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" }
+
+// piece move options - possible disambiguation, possible capture and target location
+// atomic to prevent double disambig from taking 2 moves as 1 (happened with Kg1 h4)
+move_options  = @{
+    (disambig ~ capture? ~ location) |
+    (capture? ~ location)
+}
+disambig = { location | column | row }
+
+// used for additional parsing of the move options thing without losing its atomicity
+options_util = { (disambig ~ capture? ~ location) | (capture? ~ location) }
+
+// optional metadata entries
+metadata = { "[" ~ meta_key ~ "\"" ~ meta_value ~ "\"" ~ "]" }
+
+// metadata info key
+meta_key = { ASCII_ALPHA+ }
+
+// metadata info value
+meta_value = { (!"\"" ~ ANY)+ }
